@@ -112,12 +112,20 @@ module ActiveAdmin
         @columns = []
       end
 
+      def whitelist=(columns)
+        @columns = columns.reduce([]) { |a, c| a << Column.new(c) }
+      end
+
       # Add a column
       # @param [Symbol] name The name of the column.
       # @param [Proc] block A block of code that is executed on the resource
       #                     when generating row data for this column.
       def column(name, &block)
-        @columns << Column.new(name, block)
+        if column = columns.find {|c| c.name.to_s == name.to_s }
+          column.data = block
+        else
+          @columns << Column.new(name, block)
+        end
       end
 
       # removes columns by name
@@ -145,7 +153,7 @@ module ActiveAdmin
           @data = block || @name
         end
 
-        attr_reader :name, :data
+        attr_accessor :name, :data
 
         def localized_name(i18n_scope = nil)
           return name.to_s.titleize unless i18n_scope
